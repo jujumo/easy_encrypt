@@ -1,0 +1,1 @@
+start openssl aes-256-cbc -salt -in %1 -base64 -out %1.cyph.txt
