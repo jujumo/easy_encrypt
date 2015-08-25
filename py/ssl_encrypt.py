@@ -84,6 +84,8 @@ def decrypt_filepath(input_filepath, output_filepath, password, base64_encoding=
     if base64_encoding:
         input_tmp_filepath = input_filepath + '.tmp'
         decode_filepath_base64(input_filepath, input_tmp_filepath)
+    else:
+        input_tmp_filepath = input_filepath
 
     with open(input_tmp_filepath, 'rb') as in_file, open(output_filepath, 'wb') as out_file:
         decrypt_file(in_file, out_file, password)
@@ -94,11 +96,12 @@ def decrypt_filepath(input_filepath, output_filepath, password, base64_encoding=
 
 def main():
     import argparse
+    from getpass import getpass
     try:
         parser = argparse.ArgumentParser(description='Encrypt file with openSSL of the program.')
         parser.add_argument('-v', '--verbose', action='store_true', help='verbose message')
         parser.add_argument('-i', '--input', required=True, help='input file')
-        parser.add_argument('-p', '--passwd', required=True, help='password')
+        parser.add_argument('-p', '--passwd', help='password')
         parser.add_argument('-o', '--output', help='output file')
         parser.add_argument('-d', '--decrypt', action='store_true', help='Specify it must decrypt the file')
         parser.add_argument('-e', '--encrypt', action='store_true', help='Specify it must encrypt the file. Default.')
@@ -121,11 +124,15 @@ def main():
         if input_filepath == output_filepath:
             raise NameError('input and output files should be different')
 
-        passphrase = args.passwd
-        if args.decrypt:
-            encrypt_filepath(input_filepath, output_filepath, passphrase, base64_encoding=args.base64)
+        if args.passwd:
+            passphrase = args.passwd
         else:
+            passphrase = getpass()
+
+        if args.decrypt:
             decrypt_filepath(input_filepath, output_filepath, passphrase, base64_encoding=args.base64)
+        else:
+            encrypt_filepath(input_filepath, output_filepath, passphrase, base64_encoding=args.base64)
 
     except Exception as e:
         logging.critical(e)
