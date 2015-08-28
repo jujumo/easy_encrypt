@@ -61,14 +61,12 @@ def decrypt_file(in_file, out_file, password, salt_header='Salted__', key_length
     next_chunk = ''
     finished = False
     while not finished:
-        chunk, next_chunk = next_chunk, cipher.decrypt(
-            in_file.read(1024 * bs))
+        chunk, next_chunk = next_chunk, cipher.decrypt(in_file.read(1024 * bs))
         if len(next_chunk) == 0:
             padding_length = chunk[-1]  # removed ord(...) as unnecessary
             chunk = chunk[:-padding_length]
             finished = True
-            out_file.write(
-                bytes(x for x in chunk))  # changed chunk to bytes(...)
+        out_file.write(bytes(x for x in chunk))  # changed chunk to bytes(...)
 
 
 def encrypt_filepath(input_filepath, output_filepath, password, base64_encoding=True):
@@ -82,7 +80,7 @@ def encrypt_filepath(input_filepath, output_filepath, password, base64_encoding=
 def decrypt_filepath(input_filepath, output_filepath, password, base64_encoding=True):
     logging.debug('decrypting {} to {}'.format(input_filepath, output_filepath))
     if base64_encoding:
-        input_tmp_filepath = input_filepath + '.tmp'
+        input_tmp_filepath = output_filepath + '.tmp'
         decode_filepath_base64(input_filepath, input_tmp_filepath)
     else:
         input_tmp_filepath = input_filepath
