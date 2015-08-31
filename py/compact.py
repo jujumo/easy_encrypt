@@ -9,11 +9,6 @@ from os import walk
 def compact(input_path, ouput_filepath):
     input_path = realpath(input_path)
     tar = tarfile.open(ouput_filepath, "w")
-    # file_list = [relpath(join(p, n), input_path)
-    #              for p, sd, fs in walk(input_path)
-    #              for n in fs]
-    # for name in file_list:
-    #     tar.add(name)
     tar.add(input_path, arcname=basename('.'))
     tar.close()
 
