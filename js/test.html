@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="generator" content="pandoc">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title></title>
+
+<script src="aes.js"></script>
+<script src="jquery.min.js"></script>
+<script src="ssl_decrypt.js"></script>
+
+<h1 id="jumos-vault">Crypt / Decrypt test</h1>
+<div id="original"></div>
+<div id="crypted"></div>
+<div id="decrypted"></div>
+
+<script>
+	original = "content";
+	passwd = "passwd";
+	$('#original').text( original );
+	crypted = encrypt(original, passwd);
+	$('#crypted').text( crypted );
+	decrypted = decrypt(crypted, passwd);
+	$('#decrypted').text( decrypted );
+</script>
+
+</body>
+</html>
