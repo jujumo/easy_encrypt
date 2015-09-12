@@ -6,23 +6,47 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
   <title></title>
 
-<script src="aes.js"></script>
 <script src="jquery.min.js"></script>
+<script src="jquery.jcryption.3.1.0.js"></script>
+<script src="aes.js"></script>
 <script src="ssl_decrypt.js"></script>
 
 <h1 id="jumos-vault">Crypt / Decrypt test</h1>
-<div id="original"></div>
-<div id="crypted"></div>
-<div id="decrypted"></div>
+<ul>
+<li>original: <span id="original"></span></li>
+<li>crypted: <span id="crypted"></span></li>
+<li>decrypted: <span id="decrypted"></span></li>
+<li>file read: <span id="file_read"></span></li>
+</ul>
 
 <script>
-	original = "content";
+	original = "a more complexe content";
 	passwd = "passwd";
+	// original
 	$('#original').text( original );
+	
+	// simple encrypt
 	crypted = encrypt(original, passwd);
-	$('#crypted').text( crypted );
+	if (crypted.substring(0, 7) == 'U2FsdGV') { color = 'green';}
+	else { color = 'red';}
+	$('#crypted').text( crypted ).css( 'color', color );
+	
+	// simple decrypt
 	decrypted = decrypt(crypted, passwd);
-	$('#decrypted').text( decrypted );
+	if (decrypted == original) { color = 'green';}
+	else { color = 'red';}
+	$('#decrypted').text( decrypted ).css( 'color', color );
+	
+	// encrypt to file
+	filename = 'test.html'; // encrypt itself
+	content = read_file_from_url(filename);
+	if (content.substring(0, 16) == '<!DOCTYPE html>') { color = 'green';}
+	else { color = 'red';}
+	$('#file_read').text( content.substring(0, 16) + ' ...').css( 'color', color );
+	
+	// propose a download
+	write_file_to_user('propose.txt', content);
+	
 </script>
 
 </body>
