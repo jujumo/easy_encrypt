@@ -30,12 +30,10 @@ function read_file_from_user(file_selector_id) {
 }
 
 function write_file_to_user(filename, content) {
-	var element = document.createElement('a');
-	element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(content));
-	//element.setAttribute('href', 'data:text/plain;charset=utf-8,' + content);
-	element.setAttribute('download', filename);
-	element.style.display = 'none';
-	document.body.appendChild(element);
-	element.click();
-	document.body.removeChild(element);
+	a = $('<a>',{
+		download: filename,
+		href: 'data:application/download;charset=utf-8,' + encodeURIComponent(content)
+	}).appendTo('body');
+	a[0].click();
+	a.remove();
 }
