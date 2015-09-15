@@ -6,34 +6,42 @@ function read_file_from_url(filename) {
 	return content;
 }
 
-function read_file_from_user(file_selector_id) {
-	input = document.getElementById(file_selector_id);
-	if (!input) {
-		alert("Um, couldn't find the fileinput element.");
-	}
-	else if (!input.files) {
-		alert("This browser doesn't seem to support the `files` property of file inputs.");
-	}
-	else if (!input.files[0]) {
-		alert("Please select a file before clicking 'Load'");               
-	}
-	else {
-		file = input.files[0];
-			fr = new FileReader();
-			fr.onload = function(e) {
-				content = e.target.result;
-				return content;
-			};
-		  //fr.readAsText(file);
-		  fr.readAsDataURL(file);
-	}
+function encrypt_to_file(input_filename, text, passwd) {
+	var encrypted = encrypt(text, passwd);
+			a = $('<a>',{download: input_filename + '.aes',
+				href: 'data:application/octet-stream,' + encrypted
+			}).appendTo('body');
+	a[0].click();
+	a.remove();
 }
 
-function write_file_to_user(filename, content) {
-	a = $('<a>',{
-		download: filename,
-		href: 'data:application/download;charset=utf-8,' + encodeURIComponent(content)
+function decrypt_to_file(input_filename, text, passwd) {
+	var decrypted = decrypt(text, passwd);
+	if(decrypted.substr(0,5) != 'data:'){
+		alert("Invalid pass phrase or file! Please try again.");
+		return false;
+	}
+	a = $('<a>',{download: input_filename.replace('.aes', ''),
+		href: decrypted
 	}).appendTo('body');
 	a[0].click();
 	a.remove();
+}
+
+function encrypt_from_file(file, passwd, callback) {
+	reader = new FileReader();
+	reader.onload = function(e) {
+		encrypt_to_file(file.name, e.target.result, passwd);
+		if (callback!==undefined) { callback(); } 
+	};
+	reader.readAsDataURL(file);
+}
+
+function decrypt_from_file(file, passwd, callback) {
+	reader = new FileReader();
+	reader.onload = function(e) {
+		decrypt_to_file(file.name, e.target.result, passwd);
+		if (callback!==undefined) { callback(); } 
+	};
+	reader.readAsText(file);
 }
