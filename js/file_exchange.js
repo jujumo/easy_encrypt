@@ -13,12 +13,13 @@ function encrypt_to_file(input_filename, text, passwd) {
 			}).appendTo('body');
 	a[0].click();
 	a.remove();
+	return true;
 }
 
 function decrypt_to_file(input_filename, text, passwd) {
 	var decrypted = decrypt(text, passwd);
-	if(decrypted.substr(0,5) != 'data:'){
-		alert("Invalid pass phrase or file! Please try again.");
+	if(decrypted === false || decrypted.substr(0,5) != 'data:'){
+		//alert("Invalid pass phrase or file! Please try again.");
 		return false;
 	}
 	a = $('<a>',{download: input_filename.replace('.aes', ''),
@@ -26,13 +27,14 @@ function decrypt_to_file(input_filename, text, passwd) {
 	}).appendTo('body');
 	a[0].click();
 	a.remove();
+	return true;
 }
 
 function encrypt_from_file(file, passwd, callback) {
 	reader = new FileReader();
 	reader.onload = function(e) {
-		encrypt_to_file(file.name, e.target.result, passwd);
-		if (callback!==undefined) { callback(); } 
+		var ok = encrypt_to_file(file.name, e.target.result, passwd);
+		if (callback!==undefined) { callback(ok); } 
 	};
 	reader.readAsDataURL(file);
 }
@@ -40,8 +42,8 @@ function encrypt_from_file(file, passwd, callback) {
 function decrypt_from_file(file, passwd, callback) {
 	reader = new FileReader();
 	reader.onload = function(e) {
-		decrypt_to_file(file.name, e.target.result, passwd);
-		if (callback!==undefined) { callback(); } 
+		var ok = decrypt_to_file(file.name, e.target.result, passwd);
+		if (callback!==undefined) { callback(ok); } 
 	};
 	reader.readAsText(file);
 }
