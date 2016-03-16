@@ -13,7 +13,7 @@ from hashlib import md5
 try:
     from Crypto.Cipher import AES
 except ImportError as e:
-    logging.critical('Crypto not installed (or misspelled, make sure first letter is upper case in win dir).')
+    logging.critical('pycrypto not installed (or misspelled, make sure first letter is upper case in win dir).')
     raise
 from convert_base64 import encode_filepath_base64, decode_filepath_base64
 
