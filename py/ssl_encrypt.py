@@ -6,9 +6,7 @@ __author__ = 'jumo'
 import logging
 import os
 from os import urandom
-import base64
-import shutil
-
+import os.path as path
 from hashlib import md5
 try:
     from Crypto.Cipher import AES
@@ -17,6 +15,8 @@ except ImportError as e:
     raise
 from convert_base64 import encode_filepath_base64, decode_filepath_base64
 
+
+CYPHERED_EXT = '.dat'
 
 # source:
 # http://stackoverflow.com/questions/16761458/how-to-aes-encrypt-decrypt-files-using-python-pycrypto-in-an-openssl-compatible
@@ -70,15 +70,15 @@ def decrypt_file(in_file, out_file, password, salt_header='Salted__', key_length
 
 
 def encrypt_filepath(input_filepath, output_filepath, password, base64_encoding=True):
+    # logging.info('encrypting {} to {}'.format(input_filepath, output_filepath))
     with open(input_filepath, 'rb') as in_file, open(output_filepath, 'wb') as out_file:
-        logging.info('encrypting {} to {}'.format(input_filepath, output_filepath))
         encrypt_file(in_file, out_file, password)
     if base64_encoding:
         encode_filepath_base64(output_filepath, output_filepath)
 
 
 def decrypt_filepath(input_filepath, output_filepath, password, base64_encoding=True):
-    logging.debug('decrypting {} to {}'.format(input_filepath, output_filepath))
+    # logging.debug('decrypting {} to {}'.format(input_filepath, output_filepath))
     if base64_encoding:
         input_tmp_filepath = output_filepath + '.tmp'
         decode_filepath_base64(input_filepath, input_tmp_filepath)
@@ -97,37 +97,54 @@ def main():
     from getpass import getpass
     try:
         parser = argparse.ArgumentParser(description='Encrypt file with openSSL of the program.')
-        parser.add_argument('-v', '--verbose', action='store_true', help='verbose message')
+        parser.add_argument('-v', '--verbose', action='count', default=0, help='verbose message')
         parser.add_argument('-i', '--input', required=True, help='input file')
         parser.add_argument('-p', '--passwd', help='password')
         parser.add_argument('-o', '--output', help='output file')
-        parser.add_argument('-d', '--decrypt', action='store_true', help='Specify it must decrypt the file')
-        parser.add_argument('-e', '--encrypt', action='store_true', help='Specify it must encrypt the file. Default.')
+        parser_action = parser.add_mutually_exclusive_group()
+        parser_action.add_argument('-c', '--cypher', action='store_const', dest='action', const='cypher')
+        parser_action.add_argument('-d', '--decypher', action='store_const', dest='action', const='decypher')
         parser.add_argument('-b', '--base64', action='store_true', help='encode in base64')
 
         args = parser.parse_args()
 
         if args.verbose:
-            if __debug__:
-                logging.getLogger().setLevel(logging.DEBUG)
-            else:
-                logging.getLogger().setLevel(logging.INFO)
+            logging.getLogger().setLevel(logging.INFO)
+        if args.verbose > 1:
+            logging.getLogger().setLevel(logging.DEBUG)
 
-        input_filepath = os.path.abspath(args.input)
+        input_filepath = path.abspath(args.input)
+
+        # detect action: from args or from input file ext
+        action = args.action
+        if not action:
+            action = 'decypher' if input_filepath.lower().endswith(CYPHERED_EXT) else 'cypher'
+            logging.debug(f'{action} automatically detected for file {input_filepath}')
+
+        # detect output file: from args or from action
         if args.output:
-            output_filepath = os.path.abspath(args.output)
+            output_filepath = path.abspath(args.output)
         else:
-            output_filepath = os.path.splitext(input_filepath)[0] + '.dat'
+            if action == 'cypher':
+                output_filepath = input_filepath + CYPHERED_EXT
+            elif input_filepath.endswith(CYPHERED_EXT):  # remove .dat
+                output_filepath = path.splitext(input_filepath)[0]
+            else:
+                output_filepath = input_filepath + '.txt'
+            logging.debug(f'automatically detected output file {output_filepath}')
 
         if input_filepath == output_filepath:
             raise NameError('input and output files should be different')
 
+        # get password from args or interactive
         if args.passwd:
             passphrase = args.passwd
         else:
             passphrase = getpass()
 
-        if args.decrypt:
+        # execute
+        logging.info(f'{action}\n\tfrom: {input_filepath}\n\tto  : {output_filepath}\n\tba64: {args.base64}')
+        if action == 'decypher':
             decrypt_filepath(input_filepath, output_filepath, passphrase, base64_encoding=args.base64)
         else:
             encrypt_filepath(input_filepath, output_filepath, passphrase, base64_encoding=args.base64)
