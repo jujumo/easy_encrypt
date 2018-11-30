@@ -1,0 +1,19 @@
+# EASY ENCRYPT
+:toc:
+
+It is a set of tools to cypher / decypher files with link:https://fr.wikipedia.org/wiki/Advanced_Encryption_Standard[AES-256] encryption.
+It contains code in JS, Python and dos script
+
+## dependencies
+
+
+.dependencies
+|===
+|module | dependencies
+
+|JS     | None
+|Python | pycrypto
+|DOS    | openssl
+
+
+|===
