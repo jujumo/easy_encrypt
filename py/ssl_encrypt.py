@@ -18,6 +18,7 @@ from convert_base64 import encode_filepath_base64, decode_filepath_base64
 
 CYPHERED_EXT = '.dat'
 
+
 # source:
 # http://stackoverflow.com/questions/16761458/how-to-aes-encrypt-decrypt-files-using-python-pycrypto-in-an-openssl-compatible
 def derive_key_and_iv(password, salt, key_length, iv_length):

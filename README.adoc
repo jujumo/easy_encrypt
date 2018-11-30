@@ -14,6 +14,4 @@ It contains code in JS, Python and dos script
 |JS     | None
 |Python | pycrypto
 |DOS    | openssl
-
-
 |===

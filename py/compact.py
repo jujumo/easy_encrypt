@@ -2,8 +2,7 @@ __author__ = 'jumo'
 
 import logging
 import tarfile
-from os.path import join, realpath, relpath, basename
-from os import walk
+from os.path import realpath, basename
 
 
 def compact(input_path, ouput_filepath):
