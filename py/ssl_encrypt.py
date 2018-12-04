@@ -5,16 +5,18 @@ __author__ = 'jumo'
 
 import logging
 import os
-from os import urandom
+from os import urandom, remove
 import os.path as path
 from hashlib import md5
+from tempfile import mkstemp
+
 try:
     from Crypto.Cipher import AES
 except ImportError as e:
     logging.critical('pycrypto not installed (or misspelled, make sure first letter is upper case in win dir).')
     raise
 from convert_base64 import encode_filepath_base64, decode_filepath_base64
-
+from compact import compact, depack
 
 CYPHERED_EXT = '.dat'
 
@@ -81,16 +83,55 @@ def encrypt_filepath(input_filepath, output_filepath, password, base64_encoding=
 def decrypt_filepath(input_filepath, output_filepath, password, base64_encoding=True):
     # logging.debug('decrypting {} to {}'.format(input_filepath, output_filepath))
     if base64_encoding:
-        input_tmp_filepath = output_filepath + '.tmp'
-        decode_filepath_base64(input_filepath, input_tmp_filepath)
+        tmp_filepath = output_filepath + '.tmp'
+        decode_filepath_base64(input_filepath, tmp_filepath)
     else:
-        input_tmp_filepath = input_filepath
+        tmp_filepath = input_filepath
 
-    with open(input_tmp_filepath, 'rb') as in_file, open(output_filepath, 'wb') as out_file:
+    with open(tmp_filepath, 'rb') as in_file, open(output_filepath, 'wb') as out_file:
         decrypt_file(in_file, out_file, password)
 
-    if not input_tmp_filepath == input_filepath:
-        os.remove(input_tmp_filepath)
+    if not tmp_filepath == input_filepath:
+        os.remove(tmp_filepath)
+
+
+def encrypt_dirpath(input_dirpath, output_dirpath, password, base64_encoding=True, tmp_filepath=None):
+    logging.debug(f'cipher {input_dirpath} to {output_dirpath}')
+    # make a temp file if not given
+    if not tmp_filepath:
+        f, tmp_filepath = mkstemp()
+        os.close(f)
+
+    try:
+        logging.debug(f'packing {input_dirpath} to {tmp_filepath}')
+        compact(input_dirpath, tmp_filepath)
+        logging.debug(f'cipher {tmp_filepath} to {output_dirpath}')
+        encrypt_filepath(tmp_filepath, output_dirpath, password, base64_encoding=base64_encoding)
+        return True
+    finally:
+        # make sure its always cleaned up
+        logging.debug(f'cleaning archive {tmp_filepath}')
+        remove(tmp_filepath)
+    return False
+
+
+def decrypt_dirpath(input_dirpath, output_dirpath, password, base64_encoding=True, tmp_filepath=None):
+    # make a temp file if not given
+    if not tmp_filepath:
+        f, tmp_filepath = mkstemp()
+        os.close(f)
+
+    try:
+        logging.debug(f'decipher {input_dirpath} to {tmp_filepath}')
+        decrypt_filepath(input_dirpath, tmp_filepath, password, base64_encoding=base64_encoding)
+        logging.debug(f'depacking {tmp_filepath} to {output_dirpath}')
+        depack(tmp_filepath, output_dirpath)
+        return True
+    finally:
+        # make sure its always cleaned up
+        logging.debug(f'cleaning archive {tmp_filepath}')
+        remove(tmp_filepath)
+    return False
 
 
 def main():
@@ -102,9 +143,10 @@ def main():
         parser.add_argument('-i', '--input', required=True, help='input file')
         parser.add_argument('-p', '--passwd', help='password')
         parser.add_argument('-o', '--output', help='output file')
+        parser.add_argument('-d', '--directory', action='store_true', help='cipher/decipher directories instead of files.')
         parser_action = parser.add_mutually_exclusive_group()
-        parser_action.add_argument('-c', '--cypher', action='store_const', dest='action', const='cypher')
-        parser_action.add_argument('-d', '--decypher', action='store_const', dest='action', const='decypher')
+        parser_action.add_argument('--cypher', action='store_const', dest='action', const='cypher')
+        parser_action.add_argument('--decypher', action='store_const', dest='action', const='decypher')
         parser.add_argument('-b', '--base64', action='store_true', help='encode in base64')
 
         args = parser.parse_args()
@@ -145,10 +187,19 @@ def main():
 
         # execute
         logging.info(f'{action}\n\tfrom: {input_filepath}\n\tto  : {output_filepath}\n\tba64: {args.base64}')
+
         if action == 'decypher':
-            decrypt_filepath(input_filepath, output_filepath, passphrase, base64_encoding=args.base64)
+            if args.directory:
+                func = decrypt_dirpath
+            else:
+                func = decrypt_filepath
         else:
-            encrypt_filepath(input_filepath, output_filepath, passphrase, base64_encoding=args.base64)
+            if args.directory:
+                func = encrypt_dirpath
+            else:
+                func = encrypt_filepath
+
+        func(input_filepath, output_filepath, passphrase, base64_encoding=args.base64)
 
     except Exception as e:
         logging.critical(e)
