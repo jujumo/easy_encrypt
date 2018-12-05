@@ -15,8 +15,8 @@ try:
 except ImportError as e:
     logging.critical('pycrypto not installed (or misspelled, make sure first letter is upper case in win dir).')
     raise
-from convert_base64 import encode_filepath_base64, decode_filepath_base64
-from compact import compact, depack
+from .convert_base64 import encode_filepath_base64, decode_filepath_base64
+from .compact import compact, depack
 
 CYPHERED_EXT = '.dat'
 
@@ -52,6 +52,7 @@ def encrypt_file(in_file, out_file, password, salt_header='Salted__', key_length
             finished = True
         line = cipher.encrypt(chunk)
         out_file.write(line)
+    return True
 
 
 def decrypt_file(in_file, out_file, password, salt_header='Salted__', key_length=32):
@@ -70,14 +71,18 @@ def decrypt_file(in_file, out_file, password, salt_header='Salted__', key_length
             chunk = chunk[:-padding_length]
             finished = True
         out_file.write(bytes(x for x in chunk))  # changed chunk to bytes(...)
+    return True
 
 
 def encrypt_filepath(input_filepath, output_filepath, password, base64_encoding=True):
     # logging.info('encrypting {} to {}'.format(input_filepath, output_filepath))
     with open(input_filepath, 'rb') as in_file, open(output_filepath, 'wb') as out_file:
-        encrypt_file(in_file, out_file, password)
-    if base64_encoding:
+        success = encrypt_file(in_file, out_file, password)
+
+    if success and base64_encoding:
         encode_filepath_base64(output_filepath, output_filepath)
+
+    return success
 
 
 def decrypt_filepath(input_filepath, output_filepath, password, base64_encoding=True):
@@ -89,10 +94,11 @@ def decrypt_filepath(input_filepath, output_filepath, password, base64_encoding=
         tmp_filepath = input_filepath
 
     with open(tmp_filepath, 'rb') as in_file, open(output_filepath, 'wb') as out_file:
-        decrypt_file(in_file, out_file, password)
+        success = decrypt_file(in_file, out_file, password)
 
     if not tmp_filepath == input_filepath:
         os.remove(tmp_filepath)
+    return success
 
 
 def encrypt_dirpath(input_dirpath, output_dirpath, password, base64_encoding=True, tmp_filepath=None):
@@ -106,8 +112,8 @@ def encrypt_dirpath(input_dirpath, output_dirpath, password, base64_encoding=Tru
         logging.debug(f'packing {input_dirpath} to {tmp_filepath}')
         compact(input_dirpath, tmp_filepath)
         logging.debug(f'cipher {tmp_filepath} to {output_dirpath}')
-        encrypt_filepath(tmp_filepath, output_dirpath, password, base64_encoding=base64_encoding)
-        return True
+        return encrypt_filepath(tmp_filepath, output_dirpath, password, base64_encoding=base64_encoding)
+
     finally:
         # make sure its always cleaned up
         logging.debug(f'cleaning archive {tmp_filepath}')
@@ -125,8 +131,8 @@ def decrypt_dirpath(input_dirpath, output_dirpath, password, base64_encoding=Tru
         logging.debug(f'decipher {input_dirpath} to {tmp_filepath}')
         decrypt_filepath(input_dirpath, tmp_filepath, password, base64_encoding=base64_encoding)
         logging.debug(f'depacking {tmp_filepath} to {output_dirpath}')
-        depack(tmp_filepath, output_dirpath)
-        return True
+        return depack(tmp_filepath, output_dirpath)
+
     finally:
         # make sure its always cleaned up
         logging.debug(f'cleaning archive {tmp_filepath}')
