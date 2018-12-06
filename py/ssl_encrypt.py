@@ -43,6 +43,8 @@ def encrypt_file(in_file, out_file, password, salt_header='Salted__', key_length
     line = str.encode(salt_header) + salt
     out_file.write(line)
     finished = False
+    # This encryption mode is no longer secure by today's standards.
+    # see https://code.i-harness.com/fr/q/ffc272
     while not finished:
         chunk = in_file.read(1024 * bs)
         if len(chunk) == 0 or len(chunk) % bs != 0:
