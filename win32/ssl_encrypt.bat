@@ -1,1 +1,2 @@
-start openssl aes-256-cbc -salt -in %1 -base64 -out %1.cyph.txt
+SET infile=%1
+start openssl aes-256-cbc -e -base64 -md md5 -salt -in %infile% -out %infile%.enc
