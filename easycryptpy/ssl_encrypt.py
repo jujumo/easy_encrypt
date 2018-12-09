@@ -4,7 +4,7 @@ __author__ = 'jumo'
 
 
 import logging
-import os
+import os, sys
 from os import urandom, remove
 import os.path as path
 from hashlib import md5
@@ -15,10 +15,18 @@ try:
 except ImportError as e:
     logging.critical('pycrypto not installed (or misspelled, make sure first letter is upper case in win dir).')
     raise
-from .convert_base64 import encode_filepath_base64, decode_filepath_base64
-from .compact import compact, depack
 
-CYPHERED_EXT = '.dat'
+# add easycryptpy to path for import :
+# relative import cant work for both main and module,
+#  see: https://stackoverflow.com/questions/16981921/relative-imports-in-python-3
+PACKAGE_PARENT = '..'
+SCRIPT_DIR = os.path.dirname(os.path.realpath(os.path.join(os.getcwd(), os.path.expanduser(__file__))))
+sys.path.append(os.path.normpath(os.path.join(SCRIPT_DIR, PACKAGE_PARENT)))
+
+from easycryptpy.convert_base64 import encode_filepath_base64, decode_filepath_base64
+from easycryptpy.compact import compact, depack
+
+CYPHERED_EXT = '.enc'
 
 
 # source:
