@@ -1,7 +1,7 @@
 import unittest
 import os
 import os.path as path
-from ssl_encrypt import encrypt_file, decrypt_file, encrypt_filepath
+from ssl_encrypt import encrypt_file, decrypt_file, encrypt_filepath, decrypt_filepath
 import tempfile
 import subprocess
 
@@ -45,6 +45,26 @@ class FileCipherTest(unittest.TestCase):
         with open(decoded_filepath, 'r') as decoded_file:
             decoded = decoded_file.read()
 
+        self.assertEqual(decoded, plaintext)
+
+    def test_openssl_cipher_python_decipher(self):
+        password = 'password'
+        plaintext = 'content'
+        working_dir = r'a:\vault'
+        plain_filepath = path.join(working_dir, 'sample.txt')
+        coded_filepath = path.join(working_dir, 'sample.txt.enc')
+        decoded_filepath = path.join(working_dir, 'sample.txt.enc.txt')
+        with open(plain_filepath, 'w') as plain:
+            plain.write(plaintext)
+        # encrypt
+        cmd_line = ['openssl', 'aes-256-cbc', '-e', '-base64', '-md', 'md5', '-salt', '-k', password,
+                    '-in', plain_filepath, '-out', coded_filepath]
+        res = subprocess.call(cmd_line, stdout=FNULL, stderr=subprocess.STDOUT)
+        # decrypt
+        decrypt_filepath(coded_filepath, decoded_filepath, password=password)
+
+        with open(decoded_filepath, 'r') as decoded_file:
+            decoded = decoded_file.read()
         self.assertEqual(decoded, plaintext)
 
 
