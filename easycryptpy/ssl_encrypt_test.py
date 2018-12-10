@@ -1,11 +1,7 @@
 import unittest
-import os
 import os.path as path
 from ssl_encrypt import encrypt_file, decrypt_file, encrypt_filepath, decrypt_filepath, decrypt_filepath_openssl, encrypt_filepath_openssl
 import tempfile
-import subprocess
-
-FNULL = open(os.devnull, 'w')
 
 
 class FileCipherTest(unittest.TestCase):
