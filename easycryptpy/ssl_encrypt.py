@@ -27,7 +27,7 @@ from easycryptpy.convert_base64 import encode_filepath_base64, decode_filepath_b
 from easycryptpy.compact import compact, depack
 
 CYPHERED_EXT = '.enc'
-
+salt_header = 'Salted__'
 
 # source:
 # http://stackoverflow.com/questions/16761458/how-to-aes-encrypt-decrypt-files-using-python-pycrypto-in-an-openssl-compatible
@@ -40,7 +40,7 @@ def derive_key_and_iv(password, salt, key_length, iv_length):
     return d[:key_length], d[key_length:key_length+iv_length]
 
 
-def encrypt_file(in_file, out_file, password, salt_header='Salted__', key_length=32):
+def encrypt_file(in_file, out_file, password, key_length=32):
     # added salt_header=''
     bs = AES.block_size
     # replaced Crypt.Random with os.urandom
@@ -65,7 +65,7 @@ def encrypt_file(in_file, out_file, password, salt_header='Salted__', key_length
     return True
 
 
-def decrypt_file(in_file, out_file, password, salt_header='Salted__', key_length=32):
+def decrypt_file(in_file, out_file, password, key_length=32):
     # added salt_header=''
     bs = AES.block_size
     # changed 'Salted__' to salt_header
