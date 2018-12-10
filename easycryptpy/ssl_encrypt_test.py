@@ -1,6 +1,9 @@
 import unittest
 import os.path as path
-from ssl_encrypt import encrypt_file, decrypt_file, encrypt_filepath, decrypt_filepath, decrypt_filepath_openssl, encrypt_filepath_openssl
+from ssl_encrypt import encrypt_file, decrypt_file, \
+    encrypt_filepath, decrypt_filepath,\
+    decrypt_filepath_openssl, encrypt_filepath_openssl, \
+    decrypt_filepath_python, encrypt_filepath_python
 import tempfile
 
 
@@ -52,7 +55,7 @@ class FileCipherTest(unittest.TestCase):
         with open(plain_filepath, 'w') as plain:
             plain.write(plaintext)
         # encrypt python
-        encrypt_filepath(plain_filepath, coded_filepath, password=password)
+        encrypt_filepath_python(plain_filepath, coded_filepath, password=password)
         # decrypt openssl
         res = decrypt_filepath_openssl(coded_filepath, decoded_filepath, password)
         self.assertTrue(res)
@@ -74,7 +77,7 @@ class FileCipherTest(unittest.TestCase):
         # encrypt openssl
         encrypt_filepath_openssl(plain_filepath, coded_filepath, password)
         # decrypt python
-        decrypt_filepath(coded_filepath, decoded_filepath, password=password)
+        decrypt_filepath_python(coded_filepath, decoded_filepath, password=password)
         with open(decoded_filepath, 'r') as decoded_file:
             decoded = decoded_file.read()
         self.assertEqual(decoded, plaintext)

@@ -112,7 +112,7 @@ def decrypt_file(in_file, out_file, password):
     return True
 
 
-def encrypt_filepath(input_filepath, output_filepath, password):
+def encrypt_filepath_python(input_filepath, output_filepath, password):
     # logging.info('encrypting {} to {}'.format(input_filepath, output_filepath))
     with open(input_filepath, 'rb') as in_file, open(output_filepath, 'wb') as out_file:
         success = encrypt_file(in_file, out_file, password)
@@ -123,7 +123,7 @@ def encrypt_filepath(input_filepath, output_filepath, password):
     return success
 
 
-def decrypt_filepath(input_filepath, output_filepath, password):
+def decrypt_filepath_python(input_filepath, output_filepath, password):
     # logging.debug('decrypting {} to {}'.format(input_filepath, output_filepath))
     tmp_filepath = output_filepath + '.tmp'
     decode_filepath_base64(input_filepath, tmp_filepath)
@@ -150,6 +150,10 @@ def decrypt_filepath_openssl(coded_filepath, plain_filepath, password):
                 '-in', coded_filepath, '-out', plain_filepath]
     res = subprocess.call(cmd_line, stdout=FNULL, stderr=subprocess.STDOUT)
     return bool(res == 0)
+
+
+encrypt_filepath = encrypt_filepath_openssl if HAS_OPENSSL else encrypt_filepath_python
+decrypt_filepath = decrypt_filepath_openssl if HAS_OPENSSL else decrypt_filepath_python
 
 
 def encrypt_dirpath(input_dirpath, output_dirpath, password, tmp_filepath=None):
