@@ -29,6 +29,7 @@ from easycryptpy.compact import compact, depack
 
 CYPHERED_EXT = '.enc'
 salt_header = 'Salted__'
+key_length = 32
 FNULL = open(os.devnull, 'w') # to silence openssl
 
 
@@ -67,7 +68,7 @@ def derive_key_and_iv(password, salt, key_length, iv_length):
     return d[:key_length], d[key_length:key_length+iv_length]
 
 
-def encrypt_file(in_file, out_file, password, key_length=32):
+def encrypt_file(in_file, out_file, password):
     # added salt_header=''
     bs = AES.block_size
     # replaced Crypt.Random with os.urandom
@@ -92,7 +93,7 @@ def encrypt_file(in_file, out_file, password, key_length=32):
     return True
 
 
-def decrypt_file(in_file, out_file, password, key_length=32):
+def decrypt_file(in_file, out_file, password):
     # added salt_header=''
     bs = AES.block_size
     # changed 'Salted__' to salt_header
