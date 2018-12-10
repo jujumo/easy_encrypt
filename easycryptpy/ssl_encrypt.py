@@ -9,6 +9,7 @@ from os import urandom, remove
 import os.path as path
 from hashlib import md5
 from tempfile import mkstemp
+import subprocess
 
 try:
     from Crypto.Cipher import AES
@@ -28,6 +29,8 @@ from easycryptpy.compact import compact, depack
 
 CYPHERED_EXT = '.enc'
 salt_header = 'Salted__'
+FNULL = open(os.devnull, 'w') # to silence openssl
+
 
 # source:
 # http://stackoverflow.com/questions/16761458/how-to-aes-encrypt-decrypt-files-using-python-pycrypto-in-an-openssl-compatible
@@ -106,6 +109,20 @@ def decrypt_filepath(input_filepath, output_filepath, password):
     if not tmp_filepath == input_filepath:
         os.remove(tmp_filepath)
     return success
+
+
+def encrypt_filepath_openssl(plain_filepath, coded_filepath, password):
+    cmd_line = ['openssl', 'aes-256-cbc', '-e', '-base64', '-md', 'md5', '-salt', '-k', password,
+                '-in', plain_filepath, '-out', coded_filepath]
+    res = subprocess.call(cmd_line, stdout=FNULL, stderr=subprocess.STDOUT)
+    return bool(res == 0)
+
+
+def decrypt_filepath_openssl(coded_filepath, plain_filepath, password):
+    cmd_line = ['openssl', 'aes-256-cbc', '-d', '-base64', '-md', 'md5', '-salt', '-k', password,
+                '-in', coded_filepath, '-out', plain_filepath]
+    res = subprocess.call(cmd_line, stdout=FNULL, stderr=subprocess.STDOUT)
+    return bool(res == 0)
 
 
 def encrypt_dirpath(input_dirpath, output_dirpath, password, tmp_filepath=None):
