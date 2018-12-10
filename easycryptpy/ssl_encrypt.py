@@ -84,24 +84,21 @@ def decrypt_file(in_file, out_file, password, salt_header='Salted__', key_length
     return True
 
 
-def encrypt_filepath(input_filepath, output_filepath, password, base64_encoding=True):
+def encrypt_filepath(input_filepath, output_filepath, password):
     # logging.info('encrypting {} to {}'.format(input_filepath, output_filepath))
     with open(input_filepath, 'rb') as in_file, open(output_filepath, 'wb') as out_file:
         success = encrypt_file(in_file, out_file, password)
 
-    if success and base64_encoding:
+    if success:
         encode_filepath_base64(output_filepath, output_filepath)
 
     return success
 
 
-def decrypt_filepath(input_filepath, output_filepath, password, base64_encoding=True):
+def decrypt_filepath(input_filepath, output_filepath, password):
     # logging.debug('decrypting {} to {}'.format(input_filepath, output_filepath))
-    if base64_encoding:
-        tmp_filepath = output_filepath + '.tmp'
-        decode_filepath_base64(input_filepath, tmp_filepath)
-    else:
-        tmp_filepath = input_filepath
+    tmp_filepath = output_filepath + '.tmp'
+    decode_filepath_base64(input_filepath, tmp_filepath)
 
     with open(tmp_filepath, 'rb') as in_file, open(output_filepath, 'wb') as out_file:
         success = decrypt_file(in_file, out_file, password)
@@ -111,7 +108,7 @@ def decrypt_filepath(input_filepath, output_filepath, password, base64_encoding=
     return success
 
 
-def encrypt_dirpath(input_dirpath, output_dirpath, password, base64_encoding=True, tmp_filepath=None):
+def encrypt_dirpath(input_dirpath, output_dirpath, password, tmp_filepath=None):
     logging.debug(f'cipher {input_dirpath} to {output_dirpath}')
     # make a temp file if not given
     if not tmp_filepath:
@@ -122,7 +119,7 @@ def encrypt_dirpath(input_dirpath, output_dirpath, password, base64_encoding=Tru
         logging.debug(f'packing {input_dirpath} to {tmp_filepath}')
         compact(input_dirpath, tmp_filepath)
         logging.debug(f'cipher {tmp_filepath} to {output_dirpath}')
-        return encrypt_filepath(tmp_filepath, output_dirpath, password, base64_encoding=base64_encoding)
+        return encrypt_filepath(tmp_filepath, output_dirpath, password)
 
     finally:
         # make sure its always cleaned up
@@ -131,7 +128,7 @@ def encrypt_dirpath(input_dirpath, output_dirpath, password, base64_encoding=Tru
     return False
 
 
-def decrypt_dirpath(input_dirpath, output_dirpath, password, base64_encoding=True, tmp_filepath=None):
+def decrypt_dirpath(input_dirpath, output_dirpath, password, tmp_filepath=None):
     # make a temp file if not given
     if not tmp_filepath:
         f, tmp_filepath = mkstemp()
@@ -139,7 +136,7 @@ def decrypt_dirpath(input_dirpath, output_dirpath, password, base64_encoding=Tru
 
     try:
         logging.debug(f'decipher {input_dirpath} to {tmp_filepath}')
-        decrypt_filepath(input_dirpath, tmp_filepath, password, base64_encoding=base64_encoding)
+        decrypt_filepath(input_dirpath, tmp_filepath, password)
         logging.debug(f'depacking {tmp_filepath} to {output_dirpath}')
         return depack(tmp_filepath, output_dirpath)
 
@@ -163,7 +160,6 @@ def main():
         parser_action = parser.add_mutually_exclusive_group()
         parser_action.add_argument('--cypher', action='store_const', dest='action', const='cypher')
         parser_action.add_argument('--decypher', action='store_const', dest='action', const='decypher')
-        parser.add_argument('-b', '--base64', action='store_true', help='encode in base64')
 
         args = parser.parse_args()
 
@@ -202,7 +198,7 @@ def main():
             passphrase = getpass()
 
         # execute
-        logging.info(f'{action}\n\tfrom: {input_filepath}\n\tto  : {output_filepath}\n\tba64: {args.base64}')
+        logging.info(f'{action}\n\tfrom: {input_filepath}\n\tto  : {output_filepath}')
 
         if action == 'decypher':
             if args.directory:
@@ -215,7 +211,7 @@ def main():
             else:
                 func = encrypt_filepath
 
-        func(input_filepath, output_filepath, passphrase, base64_encoding=args.base64)
+        func(input_filepath, output_filepath, passphrase)
 
     except Exception as e:
         logging.critical(e)
