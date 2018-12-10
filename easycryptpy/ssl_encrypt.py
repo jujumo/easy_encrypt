@@ -4,7 +4,7 @@ __author__ = 'jumo'
 
 
 import logging
-import os, sys
+import os, sys, re
 from os import urandom, remove
 import os.path as path
 from hashlib import md5
@@ -30,6 +30,30 @@ from easycryptpy.compact import compact, depack
 CYPHERED_EXT = '.enc'
 salt_header = 'Salted__'
 FNULL = open(os.devnull, 'w') # to silence openssl
+
+
+def test_for_openssl():
+    """
+    Test the presence of openssl in the host system. Returns true if present with appropriate version.
+    :return:
+    """
+    cmd = ['openssl', 'version']
+    process = subprocess.Popen(cmd, shell=True,
+                               stdout=subprocess.PIPE,
+                               stderr=subprocess.PIPE)
+    # wait for the process to terminate
+    out, err = process.communicate()
+    if not process.returncode == 0:
+        return False
+    out = out.decode('utf-8')
+    match = re.search(r'OpenSSL (?P<major>\d)\.(?P<minor>\d)\.(?P<sub>\d)', out)
+    if not match:
+        return False
+    version = {k: int(i) for k, i in match.groupdict().items()}
+    return version['major'] >= 1 and version['minor'] >= 1 and version['sub'] >= 1
+
+
+HAS_OPENSSL = test_for_openssl()
 
 
 # source:
@@ -112,6 +136,7 @@ def decrypt_filepath(input_filepath, output_filepath, password):
 
 
 def encrypt_filepath_openssl(plain_filepath, coded_filepath, password):
+    assert HAS_OPENSSL
     cmd_line = ['openssl', 'aes-256-cbc', '-e', '-base64', '-md', 'md5', '-salt', '-k', password,
                 '-in', plain_filepath, '-out', coded_filepath]
     res = subprocess.call(cmd_line, stdout=FNULL, stderr=subprocess.STDOUT)
@@ -119,6 +144,7 @@ def encrypt_filepath_openssl(plain_filepath, coded_filepath, password):
 
 
 def decrypt_filepath_openssl(coded_filepath, plain_filepath, password):
+    assert HAS_OPENSSL
     cmd_line = ['openssl', 'aes-256-cbc', '-d', '-base64', '-md', 'md5', '-salt', '-k', password,
                 '-in', coded_filepath, '-out', plain_filepath]
     res = subprocess.call(cmd_line, stdout=FNULL, stderr=subprocess.STDOUT)
